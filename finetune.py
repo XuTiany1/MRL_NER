@@ -27,8 +27,8 @@ random.seed(42)
 seqeval = evaluate.load("seqeval")
 
 # This is where the trained model and intermediate results will be saved
-output_dir = 'mrl-2024/model-saving/'
-dataset_folder = "mrl-2024/data/"
+output_dir = 'model_saving/'
+dataset_folder = "data/"
 
 all_lang = os.listdir(dataset_folder)
 print(all_lang)
@@ -45,7 +45,7 @@ label2id = dict()
 # CHANGE TO DIFFERENT MODEL FOLDERS TO TRAIN DIFFERENT MODELS
 
 # This is where I will start my training
-checkpoint =  "mrl-2024/models/afro-xlmr-large"   
+checkpoint =  "models/afro-xlmr-large"   
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
 # Loads the tokenizer associated with model at checkpoint
 tokenizer = AutoTokenizer.from_pretrained(checkpoint)       

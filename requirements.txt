@@ -1,0 +1,6 @@
+transformers==4.31.0  # For handling pre-trained models and tokenizers
+torch>=1.10.0        # PyTorch for deep learning
+seqeval==1.2.2       # For sequence evaluation metrics (precision, recall, F1)
+datasets==2.14.0     # Hugging Face datasets library
+tqdm==4.65.0         # For progress bars
+numpy==1.23.5        # For numerical operations
