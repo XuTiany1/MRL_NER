@@ -1,0 +1,17 @@
+# Virtual env
+mrl_venv
+
+# dataset
+data
+datasets_cache
+ner
+data_mas
+data_lang
+
+# hugging face
+hf_cache
+
+# model
+models
+models/afro-xlmr-large/pytorch_model.bin
+

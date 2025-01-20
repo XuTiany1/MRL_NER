@@ -1,17 +1,39 @@
-from transformers import AutoTokenizer, AutoModelForTokenClassification
+from transformers import AutoModel, AutoTokenizer
+import os
 
-# Download and save the model
-checkpoint = "Davlan/afro-xlmr-large"  # Hugging Face model name
-save_dir = "models/afro-xlmr-large/"  # Local folder to store the model
+# List of Hugging Face models to download
+models = [
+    "Davlan/afro-xlmr-large-76L",
+    "Davlan/afro-xlmr-large",
+    "FacebookAI/xlm-roberta-large"
+]
 
-# Ensure the model folder exists
-if not os.path.exists(save_dir):
-    print(f"Downloading model {checkpoint}...")
-    tokenizer = AutoTokenizer.from_pretrained(checkpoint)
-    tokenizer.save_pretrained(save_dir)
+# Base directory for saving models
+base_dir = "./models"
 
-    model = AutoModelForTokenClassification.from_pretrained(checkpoint)
-    model.save_pretrained(save_dir)
-    print(f"Model and tokenizer saved to {save_dir}")
-else:
-    print(f"Model already exists in {save_dir}")
+# Function to download and save models
+def download_model(model_name):
+    print(f"Downloading model: {model_name}...")
+    model_dir = os.path.join(base_dir, model_name.split("/")[-1])  # Use the model name for the folder
+    os.makedirs(model_dir, exist_ok=True)
+
+    # Download model and tokenizer
+    try:
+        model = AutoModel.from_pretrained(model_name)
+        tokenizer = AutoTokenizer.from_pretrained(model_name)
+        
+        # Save model and tokenizer locally
+        model.save_pretrained(model_dir)
+        tokenizer.save_pretrained(model_dir)
+        print(f"Model saved to: {model_dir}")
+    except Exception as e:
+        print(f"Failed to download model {model_name}: {e}")
+
+# Create base directory if it doesn't exist
+os.makedirs(base_dir, exist_ok=True)
+
+# Download each model
+for model_name in models:
+    download_model(model_name)
+
+print("All models downloaded and saved successfully.")

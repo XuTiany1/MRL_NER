@@ -23,8 +23,8 @@ from transformers import AutoTokenizer
 # checkpoint = '../scratch/mrl-2024/model-saving/saving_NER/xlmr-large/test1/checkpoint-36450'
 # checkpoint = '../scratch/mrl-2024/model-saving/saving_NER/afro-xlmr-large-76L/itegrateVal/checkpoint-37005'
 # checkpoint = '../scratch/mrl-2024/model-saving/saving_NER/xlm-roberta-large/itegrateVal/checkpoint-37005'
-checkpoint = '../scratch/mrl-2024/model-saving/saving_NER/encoder-only-token-pred-10000limit-select-plustest-itegrateVal/checkpoint-37005'
-model_name = "afro-xlmr-large-76L"
+checkpoint = 'models/afro-xlmr-large'
+model_name = "afro-xlmr-large"
 
 ###########################
 # Load Models and Tokenize
@@ -233,7 +233,7 @@ def test_Ner_and_write(inputs, labels, lang_name):
 generate_file = False
 all_lang = ["bam"]
 
-dataset_folder = "../scratch/mrl-2024/data/NER_VAL_organizer/"
+dataset_folder = "data/organizer_val/"
 all_lang = os.listdir(dataset_folder)
 
 for lang in all_lang:

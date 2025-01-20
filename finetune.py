@@ -11,12 +11,12 @@ from random import shuffle
 import random
 from datasets import Dataset
 from transformers import DataCollatorWithPadding
-import MRL_NER.evaluate as evaluate
+import evaluate
 import numpy as np
 from tqdm import tqdm
 from seqeval.metrics import f1_score, precision_score, recall_score
 from transformers import DataCollatorForTokenClassification
-import MRL_NER.evaluate as evaluate
+import evaluate
 from transformers import AutoModelForTokenClassification, TrainingArguments, Trainer
 
 
@@ -28,7 +28,7 @@ seqeval = evaluate.load("seqeval")
 
 # This is where the trained model and intermediate results will be saved
 output_dir = 'model_saving/'
-dataset_folder = "data/"
+dataset_folder = "data_mas/"
 
 all_lang = os.listdir(dataset_folder)
 print(all_lang)
@@ -45,7 +45,7 @@ label2id = dict()
 # CHANGE TO DIFFERENT MODEL FOLDERS TO TRAIN DIFFERENT MODELS
 
 # This is where I will start my training
-checkpoint =  "models/afro-xlmr-large"   
+checkpoint =  "Davlan/afro-xlmr-large"   
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
 # Loads the tokenizer associated with model at checkpoint
 tokenizer = AutoTokenizer.from_pretrained(checkpoint)       
@@ -169,48 +169,58 @@ def custom_sampling(source,times):
     return result_list
 
 
+
 # Ensures balanced sampling across entities (e.g., PER, ORG, LOC).
 def balanced_tag_sampling(zipped_sentences_labels):
     sampled_zipped_data = []
     # per org loc
-    sentence_label_lists = [[],[],[]]
-    id2index = {1:0, 2:0, 3:1,4:1, 5:2,6:2}
-    
-    no_tag_sentencce_label_list = []
+    sentence_label_lists = [[], [], []]
+    id2index = {1: 0, 2: 0, 3: 1, 4: 1, 5: 2, 6: 2}
+
+    no_tag_sentence_label_list = []
     for i in range(len(zipped_sentences_labels)):
-        counts = [0,0,0]
-        label =  zipped_sentences_labels[i][1]
+        counts = [0, 0, 0]
+        label = zipped_sentences_labels[i][1]
         for j in range(len(label)):
             if label[j] > 0:
                 counts[id2index[label[j]]] += 1
         max_index = counts.index(max(counts))
         if counts[max_index] == 0:
-            no_tag_sentencce_label_list.append(zipped_sentences_labels[i])
-        else:    
-        # print(max_index)
-        # print(label)
-        # if(i>100):
-        #     break
+            no_tag_sentence_label_list.append(zipped_sentences_labels[i])
+        else:
             sentence_label_lists[max_index].append(zipped_sentences_labels[i])
-    
+
+    # Print the initial counts per category
     length_list = [len(sentence_label_list) for sentence_label_list in sentence_label_lists]
+    print("Initial counts per category:")
+    print(f"PER: {length_list[0]}, ORG: {length_list[1]}, LOC: {length_list[2]}")
+    print(f"Sentences with no tags: {len(no_tag_sentence_label_list)}")
+
     max_length = length_list[length_list.index(max(length_list))]
-    print(max_length)
-    print(length_list)
-    print(len(no_tag_sentencce_label_list))
+    print("Max length of a category:", max_length)
+
     if len(zipped_sentences_labels) < each_lang_limit:
+        print(f"Dataset size ({len(zipped_sentences_labels)}) is below limit ({each_lang_limit}). Returning full dataset.")
         return zipped_sentences_labels
+
     for h in range(len(sentence_label_lists)):
-            times = min(each_lang_limit/len(sentence_label_lists),max_length)/len(sentence_label_lists[h])
-            # print(len(custom_sampling(sentence_label_lists[h], times)))
-            sampled_zipped_data += custom_sampling(sentence_label_lists[h], times)
-    print(len(sampled_zipped_data))
-    if len(no_tag_sentencce_label_list) + len(sampled_zipped_data) < each_lang_limit:
-        sampled_zipped_data += no_tag_sentencce_label_list
+        times = min(each_lang_limit / len(sentence_label_lists), max_length) / len(sentence_label_lists[h])
+        sampled_zipped_data += custom_sampling(sentence_label_lists[h], times)
+
+    # Final counts after sampling
+    print("Final counts per category after sampling:")
+    final_length_list = [len([example for example in sampled_zipped_data if example in sentence_label_list])
+                         for sentence_label_list in sentence_label_lists]
+    print(f"PER: {final_length_list[0]}, ORG: {final_length_list[1]}, LOC: {final_length_list[2]}")
+    print(f"Sentences with no tags: {len(no_tag_sentence_label_list)}")
+
+    if len(no_tag_sentence_label_list) + len(sampled_zipped_data) < each_lang_limit:
+        sampled_zipped_data += no_tag_sentence_label_list
     else:
-        sampled_zipped_data += no_tag_sentencce_label_list[:int(each_lang_limit-len(sampled_zipped_data))]
-    
-    return sampled_zipped_data 
+        sampled_zipped_data += no_tag_sentence_label_list[:int(each_lang_limit - len(sampled_zipped_data))]
+
+    print("Final dataset size:", len(sampled_zipped_data))
+    return sampled_zipped_data
 
 
 #  Further refines the sampled data to limit the size (each_lang_limit).
@@ -277,8 +287,10 @@ for lang in all_lang:
         lang_now = lang
 
         # Datafile folders are here!
+
+        print(lang)
         train_data_file =  open(dataset_folder +lang + "/train.txt","r",encoding="utf-8")
-        dev_data_file =  open(dataset_folder +lang + "/dev.txt","r",encoding="utf-8")
+        dev_data_file =  open(dataset_folder +lang + "/validation.txt","r",encoding="utf-8")
         test_data_file =  open(dataset_folder +lang + "/test.txt","r",encoding="utf-8")
         
         train_input_sentences, train_output_sentences = read_conll_file(train_data_file)
@@ -420,7 +432,7 @@ tokenized_dev_ds = dev_ds.map(tokenize_and_align_labels, batched=True)
 
 
 batch_size = 2
-batch_size = 32
+batch_size = 1
 
 
 # ------------------------------
