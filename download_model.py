@@ -5,7 +5,8 @@ import os
 models = [
     "Davlan/afro-xlmr-large-76L",
     "Davlan/afro-xlmr-large",
-    "FacebookAI/xlm-roberta-large"
+    "FacebookAI/xlm-roberta-large",
+    "urchade/gliner_multi-v2.1"
 ]
 
 # Base directory for saving models
